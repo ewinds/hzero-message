@@ -1,11 +1,12 @@
 package org.hzero.message.app.service.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.io.IOException;
+import java.util.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.message.api.dto.UserMessageDTO;
 import org.hzero.message.api.dto.UserSimpleDTO;
@@ -20,10 +21,14 @@ import org.hzero.message.domain.repository.MessageTransactionRepository;
 import org.hzero.message.domain.repository.UserMessageRepository;
 import org.hzero.message.infra.constant.HmsgConstant;
 import org.hzero.message.infra.exception.SendMessageException;
+import org.hzero.mybatis.helper.DataSecurityHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import io.choerodon.core.domain.Page;
 import io.choerodon.mybatis.pagehelper.domain.PageRequest;
@@ -36,6 +41,9 @@ import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 @Service
 public class MessageServiceImpl implements MessageService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageServiceImpl.class);
+
+    private final ObjectMapper objectMapper;
     private final SmsSendService smsSendService;
     private final WebSendService webSendService;
     private final CallSendService callSendService;
@@ -50,7 +58,8 @@ public class MessageServiceImpl implements MessageService {
     private final MessageTransactionRepository messageTransactionRepository;
 
     @Autowired
-    public MessageServiceImpl(SmsSendService smsSendService,
+    public MessageServiceImpl(ObjectMapper objectMapper,
+                              SmsSendService smsSendService,
                               WebSendService webSendService,
                               CallSendService callSendService,
                               EmailSendService emailSendService,
@@ -62,6 +71,7 @@ public class MessageServiceImpl implements MessageService {
                               UserMessageRepository userMessageRepository,
                               MessageReceiverRepository messageReceiverRepository,
                               MessageTransactionRepository messageTransactionRepository) {
+        this.objectMapper = objectMapper;
         this.smsSendService = smsSendService;
         this.webSendService = webSendService;
         this.callSendService = callSendService;
@@ -127,6 +137,8 @@ public class MessageServiceImpl implements MessageService {
     public Message resendMessage(Long tenantId, long transactionId) {
         UserMessageDTO message = messageRepository.selectMessageDetails(transactionId);
         Assert.notNull(message, BaseConstants.ErrorCode.DATA_NOT_EXISTS);
+        // 获取消息参数
+        message.setArgs(buildArgs(message.getSendArgs()));
         if (tenantId != null) {
             Assert.isTrue(tenantId.equals(message.getFromTenantId()), BaseConstants.ErrorCode.DATA_INVALID);
         }
@@ -150,6 +162,26 @@ public class MessageServiceImpl implements MessageService {
             default:
                 throw new SendMessageException(BaseConstants.ErrorCode.DATA_INVALID);
         }
+    }
+
+    private Map<String, Object> buildArgs(String argsStr) {
+        Map<String, Object> args = new HashMap<>(16);
+        try {
+            if (StringUtils.hasText(argsStr)) {
+                args = objectMapper.readValue(argsStr, new TypeReference<Map<String, Object>>() {});
+                for(Map.Entry<String, Object> entry : args.entrySet()) {
+                    String key = entry.getKey();
+                    try {
+                        args.put(key, DataSecurityHelper.decrypt(String.valueOf(entry.getValue())));
+                    } catch (Exception e) {
+                        args.put(key, entry.getValue());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("{}", ExceptionUtils.getStackTrace(e));
+        }
+        return args;
     }
 
     @Override

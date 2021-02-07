@@ -1,5 +1,16 @@
 package org.hzero.message.domain.entity;
 
+import java.util.Date;
+import java.util.Objects;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
@@ -15,17 +26,6 @@ import org.hzero.mybatis.domian.Condition;
 import org.hzero.mybatis.util.Sqls;
 import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.util.Assert;
-
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import java.util.Date;
-import java.util.Objects;
 
 import io.choerodon.mybatis.annotation.ModifyAudit;
 import io.choerodon.mybatis.annotation.VersionAudit;
@@ -64,12 +64,22 @@ public class TemplateServerLine extends AuditDomain {
         if (!Objects.equals(typeCode, HmsgConstant.MessageType.WEB) && !Objects.equals(typeCode, HmsgConstant.MessageType.WEB_HOOK)) {
             Assert.isTrue(StringUtils.isNotBlank(serverCode), HmsgConstant.ErrorCode.TEMPLATE_NO_SERVER);
         }
-        int cnt = templateServerLineRepository.selectCountByCondition(Condition.builder(TemplateServerLine.class).andWhere(Sqls.custom()
-                .andEqualTo(FIELD_TEMP_SERVER_ID, tempServerId)
-                .andEqualTo(FIELD_TYPE_CODE, typeCode)
-                .andEqualTo(FIELD_TEMPLATE_CODE, templateCode)
-                .andNotEqualTo(FIELD_TEMP_SERVER_LINE_ID, tempServerLineId, true))
-                .build());
+        int cnt;
+        if (Objects.equals(typeCode, HmsgConstant.MessageType.WEB_HOOK)) {
+            // webhook允许多个，但模板编码不可重复
+            cnt = templateServerLineRepository.selectCountByCondition(Condition.builder(TemplateServerLine.class).andWhere(Sqls.custom()
+                    .andEqualTo(FIELD_TEMP_SERVER_ID, tempServerId)
+                    .andEqualTo(FIELD_TYPE_CODE, typeCode)
+                    .andEqualTo(FIELD_TEMPLATE_CODE, templateCode)
+                    .andNotEqualTo(FIELD_TEMP_SERVER_LINE_ID, tempServerLineId, true))
+                    .build());
+        } else {
+            cnt = templateServerLineRepository.selectCountByCondition(Condition.builder(TemplateServerLine.class).andWhere(Sqls.custom()
+                    .andEqualTo(FIELD_TEMP_SERVER_ID, tempServerId)
+                    .andEqualTo(FIELD_TYPE_CODE, typeCode)
+                    .andNotEqualTo(FIELD_TEMP_SERVER_LINE_ID, tempServerLineId, true))
+                    .build());
+        }
         Assert.isTrue(cnt == 0, HmsgConstant.ErrorCode.REPEAT_SERVER_ASSOCIATION);
     }
 

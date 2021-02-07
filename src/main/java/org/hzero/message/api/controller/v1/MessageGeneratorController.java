@@ -1,5 +1,6 @@
 package org.hzero.message.api.controller.v1;
 
+import io.swagger.annotations.*;
 import org.hzero.boot.message.config.MessageClientProperties;
 import org.hzero.core.util.Results;
 import org.hzero.message.api.dto.UserMessageDTO;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import io.choerodon.core.iam.ResourceLevel;
 import io.choerodon.swagger.annotation.Permission;
-import io.swagger.annotations.*;
 
 /**
  * <p>
@@ -26,8 +26,9 @@ import io.swagger.annotations.*;
 @RestController("messageGeneratorController.v1")
 @RequestMapping("v1/{organizationId}")
 public class MessageGeneratorController {
-    private MessageGeneratorService messageGeneratorService;
-    private MessageClientProperties messageClientProperties;
+
+    private final MessageGeneratorService messageGeneratorService;
+    private final MessageClientProperties messageClientProperties;
 
     @Autowired
     public MessageGeneratorController(MessageGeneratorService messageGeneratorService, MessageClientProperties messageClientProperties) {
@@ -45,6 +46,7 @@ public class MessageGeneratorController {
     @PostMapping("/messages/contents")
     public ResponseEntity<Message> generateContent(@PathVariable("organizationId") Long organizationId,
                                                    @RequestBody @ApiParam(value = "templateCode(必须),args(可空),lang(可空，取默认语言)") UserMessageDTO userMessage) {
-        return Results.success(messageGeneratorService.generateMessage(organizationId, userMessage.getTemplateCode(), StringUtils.hasText(userMessage.getLang()) ? userMessage.getLang() : messageClientProperties.getDefaultLang(), userMessage.getArgs()));
+        return Results.success(messageGeneratorService.generateMessage(organizationId, userMessage.getTemplateCode(),
+                StringUtils.hasText(userMessage.getLang()) ? userMessage.getLang() : messageClientProperties.getDefaultLang(), userMessage.getArgs()));
     }
 }

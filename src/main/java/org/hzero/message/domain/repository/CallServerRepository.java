@@ -1,9 +1,10 @@
 package org.hzero.message.domain.repository;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 import org.hzero.message.domain.entity.CallServer;
 import org.hzero.mybatis.base.BaseRepository;
+
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
 /**
  * 语音消息服务资源库
@@ -34,4 +35,13 @@ public interface CallServerRepository extends BaseRepository<CallServer> {
      * @return 语音配置明细
      */
     CallServer detailCallServer(Long tenantId, Long serverId);
+
+    /**
+     * 根据编码查询服务配置
+     *
+     * @param tenantId   租户id
+     * @param serverCode 服务编码
+     * @return 查询结果
+     */
+    CallServer selectByCode(Long tenantId, String serverCode);
 }

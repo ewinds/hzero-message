@@ -1,13 +1,13 @@
 package org.hzero.message.infra.feign;
 
-import java.util.List;
-
 import org.hzero.common.HZeroService;
 import org.hzero.message.domain.entity.UserGroupAssign;
 import org.hzero.message.infra.feign.fallback.IamRemoteServiceFallBackImpl;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * iam
@@ -65,4 +65,28 @@ public interface IamRemoteService {
                                            @PathVariable(name = "roleId") Long roleId,
                                            @RequestParam("page") Integer page,
                                            @RequestParam("size") Integer size);
+
+    /**
+     * 查询用户
+     *
+     * @param organizationId 租户ID
+     * @param userIds        用户ID
+     * @return 用户
+     */
+    @GetMapping("/hzero/v1/{organizationId}/users/by-ids")
+    ResponseEntity<String> listReceiverByUserIds(@PathVariable("organizationId") Long organizationId,
+                                                 @RequestParam("userIds") List<Long> userIds);
+
+    /**
+     * 查询用户
+     *
+     * @param organizationId    租户ID
+     * @param userIds           用户ID
+     * @param thirdPlatformType 三方平台类型
+     * @return 用户
+     */
+    @GetMapping("/hzero/v1/{organizationId}/open-users/by-ids")
+    ResponseEntity<String> listOpenReceiverByUserIds(@PathVariable("organizationId") Long organizationId,
+                                                     @RequestParam("userIds") List<Long> userIds,
+                                                     @RequestParam("thirdPlatformType") String thirdPlatformType);
 }

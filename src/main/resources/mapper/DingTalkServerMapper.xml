@@ -23,7 +23,7 @@
         SELECT
             hds.server_id,
             hds.server_code,
-            hds.server_name,
+            hdst.server_name,
             hds.auth_type,
             hds.app_key,
             hds.tenant_id,
@@ -33,6 +33,7 @@
             ht.tenant_name
         FROM
             hmsg_dingtalk_server hds
+        JOIN hmsg_dingtalk_server_tl hdst ON hdst.server_id = hds.server_id AND hdst.lang = #{lang}
         JOIN hpfm_tenant_tl ht ON ht.tenant_id = hds.tenant_id AND ht.lang = #{lang}
         WHERE 1 = 1
         <if test="tenantId != null">
@@ -50,7 +51,7 @@
         </if>
         <if test="serverName != null and serverName != ''">
             <bind name="serverNameLike" value="'%' + serverName + '%'"/>
-            AND hds.server_name LIKE #{serverNameLike}
+            AND hdst.server_name LIKE #{serverNameLike}
         </if>
     </select>
     <select id="getDingTalkServerById" resultType="org.hzero.message.domain.entity.DingTalkServer">

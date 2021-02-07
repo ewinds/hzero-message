@@ -28,6 +28,7 @@ public class ReceiverTypeLine extends AuditDomain {
 	public static final String FIELD_RECEIVER_USER_GROUP_ID = "receiverTypeLineId";
 	public static final String FIELD_RECEIVER_TYPE_ID = "receiverTypeId";
 	public static final String FIELD_USER_GROUP_ID = "receiveTargetId";
+	public static final String FIELD_RECEIVER_DETAIL = "receiverDetail";
 
 	//
 	// 业务方法(按public protected private顺序排列)
@@ -55,6 +56,8 @@ public class ReceiverTypeLine extends AuditDomain {
 	private String receiveTargetCode;
 	@Transient
 	private String receiveTargetName;
+	@Transient
+	private ReceiverDetail receiverDetail;
 	//
 	// getter/setter
 	// ------------------------------------------------------------------------------
@@ -84,8 +87,9 @@ public class ReceiverTypeLine extends AuditDomain {
 		return receiveTargetId;
 	}
 
-	public void setReceiveTargetId(Long receiveTargetId) {
+	public ReceiverTypeLine setReceiveTargetId(Long receiveTargetId) {
 		this.receiveTargetId = receiveTargetId;
+		return this;
 	}
 
 	public String getReceiveTargetCode() {
@@ -112,6 +116,15 @@ public class ReceiverTypeLine extends AuditDomain {
 		this.receiveTargetTenantId = receiveTargetTenantId;
 	}
 
+	public ReceiverDetail getReceiverDetail() {
+		return receiverDetail;
+	}
+
+	public ReceiverTypeLine setReceiverDetail(ReceiverDetail receiverDetail) {
+		this.receiverDetail = receiverDetail;
+		return this;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -126,7 +139,8 @@ public class ReceiverTypeLine extends AuditDomain {
 				Objects.equals(receiveTargetId, that.receiveTargetId) &&
 				Objects.equals(receiveTargetTenantId, that.receiveTargetTenantId) &&
 				Objects.equals(receiveTargetCode, that.receiveTargetCode) &&
-				Objects.equals(receiveTargetName, that.receiveTargetName);
+				Objects.equals(receiveTargetName, that.receiveTargetName) &&
+				Objects.equals(receiverDetail, that.receiverDetail);
 	}
 
 	@Override

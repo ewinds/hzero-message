@@ -1,6 +1,8 @@
 package org.hzero.message.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +43,7 @@ import io.choerodon.mybatis.domain.AuditDomain;
 @VersionAudit
 @ModifyAudit
 @Table(name = "hmsg_wechat_official")
+@MultiLanguage
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WechatOfficial extends AuditDomain {
 
@@ -163,6 +166,7 @@ public class WechatOfficial extends AuditDomain {
     @ApiModelProperty(value = "配置名称", required = true)
     @NotBlank
     @Length(max = 60)
+    @MultiLanguageField
     private String serverName;
     @ApiModelProperty(value = "授权类型，值集：HMSG.WECHAT.AUTH_TYPE", required = true)
     @NotBlank
@@ -182,6 +186,7 @@ public class WechatOfficial extends AuditDomain {
     @ApiModelProperty(value = "租户ID，hpfm_tenant.tenant_id", required = true)
     @NotNull
     @Unique
+    @MultiLanguageField
     private Long tenantId;
     @ApiModelProperty(value = "启用标识", required = true)
     @NotNull

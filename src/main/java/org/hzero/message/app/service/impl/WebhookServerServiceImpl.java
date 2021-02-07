@@ -56,11 +56,11 @@ public class WebhookServerServiceImpl extends BaseAppService implements WebhookS
             webhookServer.setTenantId(tenantId);
         }
         validObject(webhookServer);
+        // 校验数据
+        serverRepository.validWebHookParams(webhookServer);
         if (StringUtils.isNotBlank(webhookServer.getSecret())) {
             webhookServer.setSecret(DataSecurityHelper.encrypt(webhookServer.getSecret()));
         }
-        // 校验数据
-        serverRepository.validWebHookParams(webhookServer);
         serverRepository.insertSelective(webhookServer);
         return webhookServer;
     }
@@ -72,12 +72,12 @@ public class WebhookServerServiceImpl extends BaseAppService implements WebhookS
         if (tenantId != null) {
             webhookServer.setTenantId(tenantId);
         }
-        if (StringUtils.isNotBlank(webhookServer.getSecret())) {
-            webhookServer.setSecret(DataSecurityHelper.encrypt(webhookServer.getSecret()));
-        }
         validObject(webhookServer, WebhookServer.Update.class);
         // 校验数据
         serverRepository.validWebHookParams(webhookServer);
+        if (StringUtils.isNotBlank(webhookServer.getSecret())) {
+            webhookServer.setSecret(DataSecurityHelper.encrypt(webhookServer.getSecret()));
+        }
         serverRepository.updateOptional(webhookServer, WebhookServer.UPDATE_FIELDS);
         return webhookServer;
     }

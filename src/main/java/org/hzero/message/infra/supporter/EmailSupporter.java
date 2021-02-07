@@ -49,11 +49,13 @@ public class EmailSupporter {
     }
 
     public static void sendEmail(JavaMailSender javaMailSender, EmailServer emailServer, Message message, List<String> to, Integer batchSend) throws MessagingException {
+        // 明文消息不存在，使用content
+        String mailContent = StringUtils.isEmpty(message.getPlainContent()) ? message.getContent() : message.getPlainContent();
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, BaseConstants.DEFAULT_CHARSET);
         mimeMessageHelper.setFrom(emailServer.getSender());
         mimeMessageHelper.setSubject(message.getSubject());
-        mimeMessageHelper.setText(message.getContent(), true);
+        mimeMessageHelper.setText(mailContent, true);
         // 附件
         if (!CollectionUtils.isEmpty(message.getAttachmentList())) {
             message.getAttachmentList().forEach(item -> {

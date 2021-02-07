@@ -22,16 +22,17 @@
     <select id="listCallServer" resultType="org.hzero.message.domain.entity.CallServer">
         <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()" />
         SELECT
-        	hcs.server_id,
-        	hcs.server_code,
-        	hcs.server_name,
-        	hcs.server_type_code,
-        	hcs.tenant_id,
-        	ht.tenant_name,
-        	hcs.enabled_flag,
-        	hcs.object_version_number
+            hcs.server_id,
+            hcs.server_code,
+            hcst.server_name,
+            hcs.server_type_code,
+            hcs.tenant_id,
+            ht.tenant_name,
+            hcs.enabled_flag,
+            hcs.object_version_number
         FROM
-        	hmsg_call_server hcs
+            hmsg_call_server hcs
+        JOIN hmsg_call_server_tl hcst ON hcst.server_id = hcs.server_id AND hcst.lang = #{lang}
         JOIN hpfm_tenant_tl ht ON ht.tenant_id = hcs.tenant_id AND ht.lang = #{lang}
         WHERE 1 = 1
         <if test="tenantId != null">
@@ -49,7 +50,7 @@
         </if>
         <if test="serverName != null and serverName != ''">
             <bind name="serverNameLike" value="'%' + serverName + '%'"/>
-            AND hcs.server_name LIKE #{serverNameLike}
+            AND hcst.server_name LIKE #{serverNameLike}
         </if>
     </select>
 
@@ -58,7 +59,7 @@
         SELECT
         	hcs.server_id,
         	hcs.server_code,
-        	hcs.server_name,
+            hcst.server_name,
         	hcs.server_type_code,
         	hcs.access_key,
         	hcs.ext_param,
@@ -68,10 +69,26 @@
         	hcs.object_version_number
         FROM
         	hmsg_call_server hcs
+        JOIN hmsg_call_server_tl hcst ON hcst.server_id = hcs.server_id AND hcst.lang = #{lang}
         JOIN hpfm_tenant_tl ht ON ht.tenant_id = hcs.tenant_id AND ht.lang = #{lang}
         WHERE hcs.server_id = #{serverId}
         <if test="tenantId != null">
             AND hcs.tenant_id = #{tenantId}
         </if>
+    </select>
+
+    <select id="selectByCode" resultType="org.hzero.message.domain.entity.CallServer">
+        SELECT
+            hcs.server_id,
+            hcs.server_code,
+            hcs.server_name,
+            hcs.enabled_flag,
+            hcs.tenant_id,
+            hcs.object_version_number
+        FROM
+            hmsg_call_server hcs
+        WHERE
+            hcs.tenant_id = #{tenantId}
+        AND hcs.server_code = #{serverCode}
     </select>
 </mapper>

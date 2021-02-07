@@ -1,12 +1,8 @@
 package org.hzero.message.app.service.impl;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.hzero.boot.message.entity.MessageSender;
 import org.hzero.boot.message.entity.Receiver;
 import org.hzero.core.base.BaseConstants;
@@ -53,7 +49,6 @@ public class CallSendServiceImpl extends AbstractSendService implements CallSend
 
     private static final Logger logger = LoggerFactory.getLogger(CallSendServiceImpl.class);
 
-    private final ObjectMapper objectMapper;
     private final MessageRepository messageRepository;
     private final CallServerService callServerService;
     private final IMessageLangService messageLangService;
@@ -64,8 +59,7 @@ public class CallSendServiceImpl extends AbstractSendService implements CallSend
     private final MessageTransactionRepository messageTransactionRepository;
 
     @Autowired
-    public CallSendServiceImpl(ObjectMapper objectMapper,
-                               MessageRepository messageRepository,
+    public CallSendServiceImpl(MessageRepository messageRepository,
                                CallServerService callServerService,
                                IMessageLangService messageLangService,
                                MessageReceiverService messageReceiverService,
@@ -73,7 +67,6 @@ public class CallSendServiceImpl extends AbstractSendService implements CallSend
                                MessageGeneratorService messageGeneratorService,
                                MessageReceiverRepository messageReceiverRepository,
                                MessageTransactionRepository messageTransactionRepository) {
-        this.objectMapper = objectMapper;
         this.messageRepository = messageRepository;
         this.callServerService = callServerService;
         this.messageLangService = messageLangService;
@@ -138,7 +131,7 @@ public class CallSendServiceImpl extends AbstractSendService implements CallSend
                 messageReceiverRepository.insertSelective(new MessageReceiver().setMessageId(message.getMessageId())
                         .setTenantId(message.getTenantId()).setReceiverAddress(receiver.getPhone()).setIdd(receiver.getIdd()));
             }
-            sendMessage(messageSender.getReceiverAddressList(), message, callServer, messageSender.getArgs());
+            sendMessage(messageSender.getReceiverAddressList(), message, callServer, messageSender.getObjectArgs());
             messageRepository.updateByPrimaryKeySelective(message.setSendFlag(BaseConstants.Flag.YES));
             MessageTransaction transaction = new MessageTransaction()
                     .setMessageId(message.getMessageId())
@@ -153,7 +146,7 @@ public class CallSendServiceImpl extends AbstractSendService implements CallSend
         return message;
     }
 
-    private void sendMessage(List<Receiver> receiverAddressList, Message message, CallServer callServer, Map<String, String> args) {
+    private void sendMessage(List<Receiver> receiverAddressList, Message message, CallServer callServer, Map<String, Object> args) {
         CallService callService = null;
         Map<String, CallService> callServiceMap = ApplicationContextHelper.getContext().getBeansOfType(CallService.class);
         for (Map.Entry<String, CallService> entry : callServiceMap.entrySet()) {
@@ -173,7 +166,13 @@ public class CallSendServiceImpl extends AbstractSendService implements CallSend
         CallMessage callMessage = new CallMessage();
         BeanUtils.copyProperties(callServer, callConfig);
         BeanUtils.copyProperties(message, callMessage);
-        callService.callSend(callReceiverList, callConfig, callMessage, args);
+        // 明文消息不存在，使用content
+        callMessage.setContent(StringUtils.isEmpty(message.getPlainContent()) ? message.getContent() : message.getPlainContent());
+        Map<String, String> map = new HashMap<>(16);
+        if (!CollectionUtils.isEmpty(args)) {
+            args.forEach((k, v) -> map.put(k, String.valueOf(v)));
+        }
+        callService.callSend(callReceiverList, callConfig, callMessage, map);
     }
 
     @Override
@@ -185,35 +184,21 @@ public class CallSendServiceImpl extends AbstractSendService implements CallSend
             // 获取短信配置
             CallServer callServer = callServerService.getCallServer(message.getTenantId(), message.getServerCode());
             validServer(callServer, message.getTenantId(), message.getServerCode());
+            // 重新生成消息内容
+            Message messageContent = messageGeneratorService.generateMessage(message.getTenantId(), message.getTemplateCode(), message.getLang(), message.getArgs());
+            if (messageContent != null) {
+                message.setPlainContent(messageContent.getPlainContent());
+            }
             sendMessage(message.getMessageReceiverList().stream()
                             .map(item -> new Receiver().setPhone(item.getReceiverAddress()).setIdd(item.getIdd()))
                             .collect(Collectors.toList()),
-                    message, callServer, buildArgs(message.getSendArgs()));
+                    message, callServer, message.getArgs());
             successProcessUpdate(message);
         } catch (Exception e) {
             logger.error("Send email failed [{} -> {}]", message.getServerCode(), message.getMessageReceiverList(), e.fillInStackTrace());
             failedProcessUpdate(message, e);
         }
         return message;
-    }
-
-    private Map<String, String> buildArgs(String argsStr) {
-        Map<String, String> args = new HashMap<>(16);
-        try {
-            if (StringUtils.hasText(argsStr)) {
-                JsonNode jsonNode = objectMapper.readTree(argsStr);
-                if (jsonNode != null) {
-                    Iterator<Map.Entry<String, JsonNode>> iterator = jsonNode.fields();
-                    while (iterator.hasNext()) {
-                        Map.Entry<String, JsonNode> item = iterator.next();
-                        args.put(item.getKey(), String.valueOf(item.getValue()));
-                    }
-                }
-            }
-        } catch (IOException e) {
-            logger.error("{}", ExceptionUtils.getStackTrace(e));
-        }
-        return args;
     }
 
     private void validServer(CallServer callServer, long tenantId, String serverCode) {

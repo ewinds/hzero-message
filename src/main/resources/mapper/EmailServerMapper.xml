@@ -6,7 +6,7 @@
         select
             hes.server_id,
             hes.server_code,
-            hes.server_name,
+            hest.server_name,
             hes.host,
             hes.port,
             hes.protocol,
@@ -18,9 +18,11 @@
             hes.tenant_id,
             hes.object_version_number,
             ht.tenant_name
-        from hmsg_email_server hes, hpfm_tenant_tl ht
-        where hes.tenant_id = ht.tenant_id
-        and ht.lang = #{lang}
+        FROM
+            hmsg_email_server hes
+        JOIN hmsg_email_server_tl hest ON hest.server_id = hes.server_id AND hest.lang = #{lang}
+        JOIN hpfm_tenant_tl ht ON hes.tenant_id = ht.tenant_id AND ht.lang = #{lang}
+        WHERE 1 = 1
         <if test="tenantId != null">
             and hes.tenant_id in (#{tenantId}<if test="includeSiteIfQueryByTenantId">, 0</if>)
         </if>
@@ -30,7 +32,7 @@
         </if>
         <if test="serverName != null and serverName != ''">
             <bind name="serverName" value="'%' + serverName + '%'"/>
-            and hes.server_name like #{serverName}
+            and hest.server_name like #{serverName}
         </if>
         <if test="enabledFlag != null">
             and hes.enabled_flag = #{enabledFlag}

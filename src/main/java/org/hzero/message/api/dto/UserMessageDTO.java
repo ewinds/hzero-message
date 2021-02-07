@@ -154,6 +154,8 @@ public class UserMessageDTO extends Message {
         return "UserMessageDTO{" +
                 "userMessageId=" + userMessageId +
                 ", readFlag=" + readFlag +
+                ", userMessageTypeCode='" + userMessageTypeCode + '\'' +
+                ", userMessageTypeMeaning='" + userMessageTypeMeaning + '\'' +
                 ", messageCategoryCode='" + messageCategoryCode + '\'' +
                 ", messageCategoryMeaning='" + messageCategoryMeaning + '\'' +
                 ", messageSubcategoryCode='" + messageSubcategoryCode + '\'' +
@@ -162,7 +164,9 @@ public class UserMessageDTO extends Message {
                 ", receiverAddressList=" + receiverAddressList +
                 ", messageCode='" + messageCode + '\'' +
                 ", transactionObjectVersionNumber=" + transactionObjectVersionNumber +
-                "} " + super.toString();
+                ", fromTenantId=" + fromTenantId +
+                ", attachmentUuid='" + attachmentUuid + '\'' +
+                '}';
     }
 
     public String getUserMessageTypeMeaning() {

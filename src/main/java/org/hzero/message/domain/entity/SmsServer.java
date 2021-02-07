@@ -1,6 +1,8 @@
 package org.hzero.message.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +41,7 @@ import io.choerodon.mybatis.domain.AuditDomain;
 @VersionAudit
 @ModifyAudit
 @Table(name = "hmsg_sms_server")
+@MultiLanguage
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("短信服务")
 @SuppressWarnings("all")
@@ -164,6 +167,7 @@ public class SmsServer extends AuditDomain {
     private String serverCode;
     @NotBlank
     @Length(max = 240)
+    @MultiLanguageField
     @ApiModelProperty("服务名称")
     private String serverName;
     @NotBlank
@@ -192,6 +196,7 @@ public class SmsServer extends AuditDomain {
     private Integer enabledFlag;
     @NotNull
     @ApiModelProperty("租户ID")
+    @MultiLanguageField
     private Long tenantId;
 
 

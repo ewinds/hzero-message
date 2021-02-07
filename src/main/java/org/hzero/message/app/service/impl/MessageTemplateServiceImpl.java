@@ -45,6 +45,7 @@ public class MessageTemplateServiceImpl implements MessageTemplateService {
     private final MessageTemplateRepository messageTemplateRepository;
 
     private static final Pattern PATTERN = Pattern.compile(HmsgConstant.TEMPLATE_CONTENT_REGEX);
+    private static final Pattern SECRET_PATTERN = Pattern.compile(HmsgConstant.TEMPLATE_SECRET_CONTENT_REGEX);
 
     @Autowired
     public MessageTemplateServiceImpl(RedisHelper redisHelper,
@@ -169,7 +170,8 @@ public class MessageTemplateServiceImpl implements MessageTemplateService {
                 MessageTemplate.FIELD_TEMPLATE_NAME, MessageTemplate.FIELD_TEMPLATE_TITLE, MessageTemplate.FIELD_TEMPLATE_CONTENT,
                 MessageTemplate.FIELD_TEMPLATE_TYPE_CODE, MessageTemplate.FIELD_ENABLED_FLAG, MessageTemplate.FIELD_SQL_VALUE,
                 MessageTemplate.FIELD_LANG, MessageTemplate.FIELD_EXTERNAL_CODE, MessageTemplate.FIELD_SERVER_TYPE_CODE,
-                MessageTemplate.FIELD_MESSAGE_CATEGORY_CODE, MessageTemplate.FIELD_MESSAGE_SUBCATEGORY_CODE);
+                MessageTemplate.FIELD_MESSAGE_CATEGORY_CODE, MessageTemplate.FIELD_MESSAGE_SUBCATEGORY_CODE,
+                MessageTemplate.FIELD_EDITOR_TYPE);
         // 更新缓存
         redisHelper.strSet(DefaultMessageGenerator.getRedisKey(messageTemplate.getTenantId(), messageTemplate.getTemplateCode(), messageTemplate.getLang()), redisHelper.toJson(messageTemplate));
         return messageTemplate;
@@ -188,25 +190,38 @@ public class MessageTemplateServiceImpl implements MessageTemplateService {
         }
         List<String> argList = new LinkedList<>();
         // 解析标题
-        Matcher titleMatcher = PATTERN.matcher(template.getTemplateTitle());
-        while (titleMatcher.find()) {
-            String arg = titleMatcher.group();
-            String argName = arg.substring(2, arg.length() - 1);
-            if (argName.startsWith("!")) {
-                argName = argName.substring(1);
-            }
-            argList.add(argName);
-        }
+        findSecretArgs(template.getTemplateTitle(), argList);
+        findArgs(template.getTemplateTitle(), argList);
         // 解析内容
-        Matcher contentMatcher = PATTERN.matcher(template.getTemplateContent());
-        while (contentMatcher.find()) {
-            String arg = contentMatcher.group();
+        findSecretArgs(template.getTemplateContent(), argList);
+        findArgs(template.getTemplateContent(), argList);
+        return argList;
+    }
+
+    private void findArgs(String content, List<String> argList) {
+        Matcher matcher = PATTERN.matcher(content);
+        while (matcher.find()) {
+            String arg = matcher.group();
+            if (arg.startsWith("${{")) {
+                continue;
+            }
             String argName = arg.substring(2, arg.length() - 1);
             if (argName.startsWith("!")) {
                 argName = argName.substring(1);
             }
             argList.add(argName);
         }
-        return argList;
+    }
+
+    private void findSecretArgs(String content, List<String> argList) {
+        Matcher matcher = SECRET_PATTERN.matcher(content);
+        while (matcher.find()) {
+            String arg = matcher.group();
+            String argName = arg.substring(3, arg.length() - 2);
+            if (argName.startsWith("!")) {
+                argName = argName.substring(1);
+            }
+            argList.add(argName);
+        }
     }
 }

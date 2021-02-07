@@ -30,11 +30,13 @@ import io.choerodon.mybatis.pagehelper.domain.PageRequest;
  */
 @Component
 public class MessageRepositoryImpl extends BaseRepositoryImpl<Message> implements MessageRepository {
-    private MessageMapper messageMapper;
-    private MessageReceiverMapper messageReceiverMapper;
+
+    private final MessageMapper messageMapper;
+    private final MessageReceiverMapper messageReceiverMapper;
 
     @Autowired
-    public MessageRepositoryImpl(MessageMapper messageMapper, MessageReceiverMapper messageReceiverMapper) {
+    public MessageRepositoryImpl(MessageMapper messageMapper,
+                                 MessageReceiverMapper messageReceiverMapper) {
         this.messageMapper = messageMapper;
         this.messageReceiverMapper = messageReceiverMapper;
     }

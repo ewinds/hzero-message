@@ -3,10 +3,13 @@ package org.hzero.message.app.service.impl;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hzero.boot.message.entity.DingTalkMsgType;
 import org.hzero.boot.message.entity.DingTalkSender;
+import org.hzero.boot.message.entity.WeChatSender;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.message.MessageAccessor;
 import org.hzero.dd.service.DingCorpMessageService;
@@ -108,8 +111,7 @@ public class DingTalkSendServiceImpl extends AbstractSendService implements Ding
             }
             // 发送消息
             messageRepository.updateByPrimaryKeySelective(message);
-            sendDingTalkMessage(dingTalkSender.getTenantId(), dingTalkSender.getServerCode(),
-                    dingTalkSender.getUserIdList(), message);
+            sendDingTalkMessage(dingTalkSender.getTenantId(), dingTalkSender.getServerCode(), dingTalkSender.getUserIdList(), message, dingTalkSender.getMsgType());
             // 记录成功
             messageRepository.updateByPrimaryKeySelective(message.setSendFlag(BaseConstants.Flag.YES));
             MessageTransaction transaction = new MessageTransaction().setMessageId(message.getMessageId())
@@ -133,7 +135,18 @@ public class DingTalkSendServiceImpl extends AbstractSendService implements Ding
         try {
             String token = dingTalkServerService.getToken(message.getTenantId(), message.getServerCode());
             List<String> userList = message.getMessageReceiverList().stream().map(MessageReceiver::getReceiverAddress).collect(Collectors.toList());
-            sendDingTalkMessage(token, userList, message);
+            DingTalkMsgType msgType = null;
+            Map<String, Object> map = message.getArgs();
+            if (map.containsKey(WeChatSender.FIELD_MSG_TYPE)) {
+                msgType = DingTalkMsgType.getType(String.valueOf(map.get(WeChatSender.FIELD_MSG_TYPE)));
+                map.remove(WeChatSender.FIELD_MSG_TYPE);
+            }
+            // 重新生成消息内容
+            Message messageContent = messageGeneratorService.generateMessage(message.getTenantId(), message.getTemplateCode(), message.getLang(), map);
+            if (messageContent != null) {
+                message.setPlainContent(messageContent.getPlainContent());
+            }
+            sendDingTalkMessage(token, userList, message, msgType);
             successProcessUpdate(message);
         } catch (Exception e) {
             failedProcessUpdate(message, e);
@@ -141,15 +154,15 @@ public class DingTalkSendServiceImpl extends AbstractSendService implements Ding
         return message;
     }
 
-    private void sendDingTalkMessage(Long tenantId, String serverCode, List<String> userIdList, Message message) {
+    private void sendDingTalkMessage(Long tenantId, String serverCode, List<String> userIdList, Message message, DingTalkMsgType msgType) {
         List<String> receiverList = saveReceiver(tenantId, userIdList, message);
         String token = dingTalkServerService.getToken(tenantId, serverCode);
         Assert.isTrue(StringUtils.isNotBlank(token), BaseConstants.ErrorCode.DATA_INVALID);
-        sendDingTalkMessage(token, receiverList, message);
+        sendDingTalkMessage(token, receiverList, message, msgType);
     }
 
-    private void sendDingTalkMessage(String token, List<String> userList, Message message) {
-        DingTalkServerSupporter.sendMessage(dingCorpMessageService, token, userList, message);
+    private void sendDingTalkMessage(String token, List<String> userList, Message message, DingTalkMsgType msgType) {
+        DingTalkServerSupporter.sendMessage(dingCorpMessageService, token, userList, message, msgType);
     }
 
 

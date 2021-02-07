@@ -97,6 +97,9 @@ public class ReceiverType extends AuditDomain {
     
     @Transient
     private String typeModeMeaning;
+
+    @Transient
+    private ReceiverDetail receiverDetail;
     //
     // getter/setter
     // ------------------------------------------------------------------------------
@@ -213,4 +216,13 @@ public class ReceiverType extends AuditDomain {
 	public void setTypeModeMeaning(String typeModeMeaning) {
 		this.typeModeMeaning = typeModeMeaning;
 	}
+
+    public ReceiverDetail getReceiverDetail() {
+        return receiverDetail;
+    }
+
+    public ReceiverType setReceiverDetail(ReceiverDetail receiverDetail) {
+        this.receiverDetail = receiverDetail;
+        return this;
+    }
 }

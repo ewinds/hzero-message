@@ -73,7 +73,6 @@ mapper:
 
 hzero:
   message:
-    message-redis-database: 1
     sms:
       fake-action: ${HZERO_SMS_FAKE:false}
   data:

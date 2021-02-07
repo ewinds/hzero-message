@@ -2,6 +2,10 @@ package org.hzero.message.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.core.exception.CommonException;
+import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.VersionAudit;
+import io.choerodon.mybatis.domain.AuditDomain;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Range;
@@ -14,6 +18,8 @@ import org.hzero.message.infra.constant.HmsgConstant;
 import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Date;
+import java.util.Objects;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -22,13 +28,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.util.Date;
-import java.util.Objects;
-
-import io.choerodon.core.exception.CommonException;
-import io.choerodon.mybatis.annotation.ModifyAudit;
-import io.choerodon.mybatis.annotation.VersionAudit;
-import io.choerodon.mybatis.domain.AuditDomain;
 
 /**
  * 消息模板
@@ -57,8 +56,7 @@ public class MessageTemplate extends AuditDomain {
     public static final String FIELD_ENABLED_FLAG = "enabledFlag";
     public static final String FIELD_MESSAGE_CATEGORY_CODE = "messageCategoryCode";
     public static final String FIELD_MESSAGE_SUBCATEGORY_CODE = "messageSubcategoryCode";
-
-
+    public static final String FIELD_EDITOR_TYPE = "editorType";
 
     //
     // 业务方法(按public protected private顺序排列)
@@ -166,6 +164,9 @@ public class MessageTemplate extends AuditDomain {
     @Range(min = 0, max = 1)
     @ApiModelProperty(value = "启用标识", allowableValues = "range[0, 1]")
     private Integer enabledFlag;
+    @ApiModelProperty(value = "编辑器类型，值集HMSG.TEMPLATE_EDITOR_TYPE")
+    @NotNull
+    private String editorType;
 
     //
     // 非数据库字段
@@ -353,6 +354,15 @@ public class MessageTemplate extends AuditDomain {
 
     public MessageTemplate setMessageSubcategoryMeaning(String messageSubcategoryMeaning) {
         this.messageSubcategoryMeaning = messageSubcategoryMeaning;
+        return this;
+    }
+
+    public String getEditorType() {
+        return editorType;
+    }
+
+    public MessageTemplate setEditorType(String editorType) {
+        this.editorType = editorType;
         return this;
     }
 

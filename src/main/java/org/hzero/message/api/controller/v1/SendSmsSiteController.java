@@ -32,7 +32,8 @@ import io.swagger.annotations.ApiOperation;
 @RestController("sendSmsSiteController.v1")
 @RequestMapping("/v1/messages/sms")
 public class SendSmsSiteController extends BaseController {
-    private SmsSendService smsSendService;
+
+    private final SmsSendService smsSendService;
 
     @Autowired
     public SendSmsSiteController(SmsSendService smsSendService) {

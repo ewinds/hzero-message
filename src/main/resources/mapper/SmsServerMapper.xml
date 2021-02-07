@@ -3,10 +3,10 @@
 <mapper namespace="org.hzero.message.infra.mapper.SmsServerMapper">
     <select id="selectSmsServer" resultType="org.hzero.message.domain.entity.SmsServer">
         <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()" />
-        select
+        SELECT
             hss.server_id,
             hss.server_code,
-            hss.server_name,
+            hsst.server_name,
             hss.server_type_code,
             hss.end_point,
             hss.access_key,
@@ -15,9 +15,11 @@
             hss.tenant_id,
             hss.object_version_number,
             ht.tenant_name
-        from hmsg_sms_server hss, hpfm_tenant_tl ht
-        where hss.tenant_id = ht.tenant_id
-        and ht.lang = #{lang}
+        FROM
+            hmsg_sms_server hss
+        JOIN hmsg_sms_server_tl hsst ON hsst.server_id = hss.server_id AND hsst.lang = #{lang}
+        JOIN hpfm_tenant_tl ht ON hss.tenant_id = ht.tenant_id AND ht.lang = #{lang}
+        where 1 = 1
         <if test="tenantId != null">
             and hss.tenant_id in (#{tenantId}<if test="includeSiteIfQueryByTenantId">, 0</if>)
         </if>
@@ -27,7 +29,7 @@
         </if>
         <if test="serverName != null and serverName != ''">
             <bind name="serverName" value="'%' + serverName + '%'"/>
-            and hss.server_name like #{serverName}
+            and hsst.server_name like #{serverName}
         </if>
         <if test="enabledFlag != null">
             and hss.enabled_flag = #{enabledFlag}

@@ -43,7 +43,7 @@ public class WebhookServerRepositoryImpl extends BaseRepositoryImpl<WebhookServe
 
     @Override
     public void validWebHookParams(WebhookServer webhookServer) {
-        if (HmsgConstant.WebHookServerType.JSON.equals(webhookServer.getServerType())) {
+        if (webhookServer.getSecret() != null && HmsgConstant.WebHookServerType.JSON.equals(webhookServer.getServerType())) {
             // 校验 webhook 秘钥格式，Json 秘钥格式为 Authorization:content
             Assert.isTrue(webhookServer.getSecret().contains(BaseConstants.Symbol.COLON), HmsgConstant.ErrorCode.WEBHOOK_JSON_SECRET_NOT_MATCH);
         }

@@ -25,7 +25,8 @@
             hmt.enabled_flag,
             hmt.tenant_id,
             hmt.object_version_number,
-            ht.tenant_name
+        ht.tenant_name,
+        hmt.editor_type
         from hmsg_message_template hmt, hpfm_tenant_tl ht
         where hmt.tenant_id = ht.tenant_id
         and ht.lang = #{tenantLang}
@@ -64,7 +65,8 @@
             hmt.enabled_flag,
             hmt.tenant_id,
             hmt.object_version_number,
-            ht.tenant_name
+        ht.tenant_name,
+        hmt.editor_type
         from hmsg_message_template hmt, hpfm_tenant_tl ht
         where hmt.tenant_id = ht.tenant_id
         and ht.lang = #{lang}

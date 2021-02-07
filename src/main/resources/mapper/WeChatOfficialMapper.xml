@@ -24,7 +24,7 @@
         SELECT
         	hwo.server_id,
         	hwo.server_code,
-        	hwo.server_name,
+            hwot.server_name,
         	hwo.auth_type,
         	hwo.appid,
         	hwo.tenant_id,
@@ -33,6 +33,7 @@
         	hwo.object_version_number
         FROM
             hmsg_wechat_official hwo
+        JOIN hmsg_wechat_official_tl hwot ON hwot.server_id = hwo.server_id AND hwot.lang = #{lang}
         JOIN hpfm_tenant_tl ht ON ht.tenant_id = hwo.tenant_id AND ht.lang = #{lang}
         WHERE 1 = 1
         <if test="tenantId != null">
@@ -50,7 +51,7 @@
         </if>
         <if test="serverName != null and serverName != ''">
             <bind name="serverNameLike" value="'%' + serverName + '%'"/>
-            AND hwo.server_name LIKE #{serverNameLike}
+            AND hwot.server_name LIKE #{serverNameLike}
         </if>
     </select>
 
@@ -59,7 +60,7 @@
         SELECT
             hwo.server_id,
             hwo.server_code,
-            hwo.server_name,
+            hwot.server_name,
             hwo.auth_type,
             hwo.appid,
             hwo.auth_address,
@@ -69,6 +70,7 @@
             hwo.object_version_number
         FROM
             hmsg_wechat_official hwo
+        JOIN hmsg_wechat_official_tl hwot ON hwot.server_id = hwo.server_id AND hwot.lang = #{lang}
         JOIN hpfm_tenant_tl ht ON ht.tenant_id = hwo.tenant_id AND ht.lang = #{lang}
         WHERE hwo.server_id = #{serverId}
         <if test="tenantId != null">

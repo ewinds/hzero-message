@@ -1,6 +1,8 @@
 package org.hzero.message.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
@@ -30,6 +32,7 @@ import io.choerodon.mybatis.domain.AuditDomain;
 @ApiModel("webhook配置")
 @VersionAudit
 @ModifyAudit
+@MultiLanguage
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @Table(name = "hmsg_webhook_server")
 public class WebhookServer extends AuditDomain {
@@ -71,6 +74,7 @@ public class WebhookServer extends AuditDomain {
     @ApiModelProperty(value = "webhook名称")
     @NotBlank(groups = Update.class)
     @Length(max = 60)
+    @MultiLanguageField
     private String serverName;
     @ApiModelProperty(value = "webhook类型，HMSG.WEBHOOK_TYPE")
     @LovValue(lovCode = "HMSG.WEBHOOK_TYPE", meaningField = "serverTypeMeaning")
@@ -90,6 +94,7 @@ public class WebhookServer extends AuditDomain {
     private Integer enabledFlag;
     @ApiModelProperty(value = "租户ID")
     @NotNull(groups = Update.class)
+    @MultiLanguageField
     private Long tenantId;
     @ApiModelProperty(value = "webhook描述")
     @Length(max = 240)

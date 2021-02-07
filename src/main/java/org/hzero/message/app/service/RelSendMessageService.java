@@ -15,17 +15,6 @@ import org.hzero.boot.message.entity.WeChatSender;
 public interface RelSendMessageService {
 
     /**
-     * 发送消息
-     *
-     * @param tempServerId 消息Id
-     * @param lang         语言
-     * @param typeCodeList 发送类型编码列表
-     * @param args         消息构建参数
-     * @param typeCode     类型代码
-     */
-    void relSendMessage(long tempServerId, String lang, List<String> typeCodeList, Map<String, String> args, String typeCode);
-
-    /**
      * 发送消息 （备注：WebHook消息支持通用结构发送）
      *
      * @param messageSender 消息发送

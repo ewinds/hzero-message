@@ -273,6 +273,11 @@ public class EmailSendServiceImpl extends AbstractSendService implements EmailSe
         try {
             EmailServer emailServer = emailServerService.getEmailServer(message.getTenantId(), message.getServerCode());
             validServer(emailServer, message.getTenantId(), message.getServerCode());
+            // 重新生成邮件消息内容
+            Message messageContent = messageGeneratorService.generateMessage(message.getTenantId(), message.getTemplateCode(), message.getLang(), message.getArgs());
+            if (messageContent != null) {
+                message.setPlainContent(messageContent.getPlainContent());
+            }
             sendEmail(message.getMessageReceiverList().stream()
                             .map(MessageReceiver::getReceiverAddress).collect(Collectors.toList()),
                     message, emailServer, EmailSupporter.javaMailSender(emailServer), BaseConstants.Flag.YES);

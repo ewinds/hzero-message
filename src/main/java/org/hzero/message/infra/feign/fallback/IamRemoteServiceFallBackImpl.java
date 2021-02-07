@@ -1,7 +1,5 @@
 package org.hzero.message.infra.feign.fallback;
 
-import java.util.List;
-
 import org.hzero.message.domain.entity.UserGroupAssign;
 import org.hzero.message.infra.feign.IamRemoteService;
 import org.slf4j.Logger;
@@ -9,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * iam
@@ -39,6 +39,18 @@ public class IamRemoteServiceFallBackImpl implements IamRemoteService {
 
     @Override
     public ResponseEntity<String> listRoleMembers(Long organizationId, Long roleId, Integer page, Integer size) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
+    @Override
+    public ResponseEntity<String> listReceiverByUserIds(Long organizationId, List<Long> userIds) {
+        logger.error("Error to list user by userIdList, userIdList= {}", userIds);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+
+    @Override
+    public ResponseEntity<String> listOpenReceiverByUserIds(Long organizationId, List<Long> userIds, String thirdPlatformType) {
+        logger.error("Error to list open-user by userIdList userIdList= {}", userIds);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 }

@@ -61,8 +61,8 @@ public class TemplateArgController extends BaseController {
     @ApiOperation(value = "初始化消息模板参数列表")
     @Permission(level = ResourceLevel.ORGANIZATION)
     @PostMapping("/init")
-    public ResponseEntity initTemplateArgs(@PathVariable("organizationId") Long organizationId,
-                                           @Encrypt Long templateId) {
+    public ResponseEntity<Void> initTemplateArgs(@PathVariable("organizationId") Long organizationId,
+                                                 @Encrypt Long templateId) {
         templateArgService.initTemplateArgs(templateId, organizationId);
         return Results.success();
     }
@@ -70,8 +70,8 @@ public class TemplateArgController extends BaseController {
     @ApiOperation(value = "修改消息模板参数")
     @Permission(level = ResourceLevel.ORGANIZATION)
     @PutMapping
-    public ResponseEntity updateTemplateArgs(@PathVariable("organizationId") Long organizationId,
-                                             @Encrypt @RequestBody TemplateArg templateArg) {
+    public ResponseEntity<TemplateArg> updateTemplateArgs(@PathVariable("organizationId") Long organizationId,
+                                                          @Encrypt @RequestBody TemplateArg templateArg) {
         validObject(templateArg);
         SecurityTokenHelper.validToken(templateArg);
         return Results.success(templateArgService.updateTemplateArgs(templateArg));
@@ -80,9 +80,10 @@ public class TemplateArgController extends BaseController {
     @ApiOperation(value = "删除消息模板参数")
     @Permission(level = ResourceLevel.ORGANIZATION)
     @DeleteMapping
-    public ResponseEntity deleteTemplateArgs(@PathVariable("organizationId") Long organizationId,
-                                             @Encrypt @RequestBody TemplateArg templateArg) {
+    public ResponseEntity<Void> deleteTemplateArgs(@PathVariable("organizationId") Long organizationId,
+                                                   @Encrypt @RequestBody TemplateArg templateArg) {
         SecurityTokenHelper.validToken(templateArg);
-        return Results.success(templateArgRepository.deleteByPrimaryKey(templateArg.getArgId()));
+        templateArgRepository.deleteByPrimaryKey(templateArg.getArgId());
+        return Results.success();
     }
 }

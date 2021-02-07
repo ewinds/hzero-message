@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hzero.boot.message.entity.WeChatSender;
 import org.hzero.message.domain.entity.Message;
 import org.hzero.message.infra.exception.SendMessageException;
@@ -12,9 +14,6 @@ import org.hzero.wechat.dto.TemplateSendResultDTO;
 import org.hzero.wechat.service.BaseWechatService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.choerodon.core.convertor.ApplicationContextHelper;
 import io.choerodon.core.exception.CommonException;
@@ -26,11 +25,12 @@ import io.choerodon.core.exception.CommonException;
  */
 public class WeChatOfficialSupporter {
 
-    private WeChatOfficialSupporter(){}
+    private WeChatOfficialSupporter() {
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(WeChatOfficialSupporter.class);
 
-    private static ObjectMapper objectMapper = ApplicationContextHelper.getContext().getBean(ObjectMapper.class);
+    private static final ObjectMapper OBJECT_MAPPER = ApplicationContextHelper.getContext().getBean(ObjectMapper.class);
 
     private static List<TemplateSendDTO> generateMessage(Message message, List<String> userList) {
         List<TemplateSendDTO> templateSendList = new ArrayList<>();
@@ -42,14 +42,14 @@ public class WeChatOfficialSupporter {
         // 调转地址
         String url = null;
         try {
-            Map<String, String> map = objectMapper.readValue(message.getSendArgs(), new TypeReference<Map<String, String>>() {
+            Map<String, String> map = OBJECT_MAPPER.readValue(message.getSendArgs(), new TypeReference<Map<String, String>>() {
             });
             if (map.containsKey(WeChatSender.FIELD_DATA)) {
-                data = objectMapper.readValue(map.get(WeChatSender.FIELD_DATA), new TypeReference<Map<String, Map<String, String>>>() {
+                data = OBJECT_MAPPER.readValue(map.get(WeChatSender.FIELD_DATA), new TypeReference<Map<String, Map<String, String>>>() {
                 });
             }
             if (map.containsKey(WeChatSender.FIELD_MINIPROGRAM)) {
-                miniprogramBean = objectMapper.readValue(map.get(WeChatSender.FIELD_MINIPROGRAM), TemplateSendDTO.MiniprogramBean.class);
+                miniprogramBean = OBJECT_MAPPER.readValue(map.get(WeChatSender.FIELD_MINIPROGRAM), TemplateSendDTO.MiniprogramBean.class);
             }
             if (map.containsKey(WeChatSender.FIELD_URL)) {
                 url = map.get(WeChatSender.FIELD_URL);

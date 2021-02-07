@@ -44,11 +44,11 @@ public interface MessageGeneratorService {
      * @param tenantId     租户Id
      * @param templateCode 消息模板编码
      * @param lang         语言
-     * @param args         消息替换参数
-     * @param map          参数
+     * @param templateArgs 消息模板需要的参数
+     * @param map          微信钉钉的真实参数
      * @return 生成消息内容和标题
      */
-    Message generateMessage(Long tenantId, String templateCode, String lang, Map<String, String> args, Map<String, String> map);
+    Message generateMessage(Long tenantId, String templateCode, String lang, Map<String, String> templateArgs, Map<String, String> map);
 
     /**
      * 获取/生成消息内容
@@ -81,7 +81,7 @@ public interface MessageGeneratorService {
      * 获取/生成消息内容
      *
      * @param webHookSender 消息发送内容
-     * @param message        消息内容
+     * @param message       消息内容
      * @return 消息内容
      */
     Message generateMessage(WebHookSender webHookSender, Message message);

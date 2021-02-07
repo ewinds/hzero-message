@@ -1,5 +1,6 @@
 package org.hzero.message.app.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hzero.message.app.service.EmailFilterService;
 import org.hzero.message.domain.entity.EmailFilter;
 import org.hzero.message.domain.repository.EmailFilterRepository;
@@ -26,8 +27,10 @@ public class EmailFilterServiceImpl implements EmailFilterService {
         emailFilterList.forEach(item -> {
             if (item.getEmailFilterId() == null) {
                 // 新建
-                item.setTenantId(organizationId);
-                emailFilterRepository.insertSelective(item);
+                if (StringUtils.isNotBlank(item.getAddress())) {
+                    item.setTenantId(organizationId);
+                    emailFilterRepository.insertSelective(item);
+                }
             } else {
                 // 更新
                 emailFilterRepository.updateOptional(item, EmailFilter.FIELD_ADDRESS);

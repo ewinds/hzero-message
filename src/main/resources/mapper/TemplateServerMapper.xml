@@ -9,10 +9,11 @@
             hts.tenant_id,
             ht.tenant_name,
             hts.message_code,
-            hts.message_name,
+            htst.message_name,
             hts.enabled_flag,
             hts.object_version_number
         from hmsg_template_server hts
+        join hmsg_template_server_tl htst on htst.temp_server_id = hts.temp_server_id and htst.lang = #{lang}
         join hpfm_tenant_tl ht on ht.tenant_id = hts.tenant_id and ht.lang = #{lang}
         <where>
             <if test="tenantId != null">
@@ -24,7 +25,7 @@
             </if>
             <if test="messageName != null and messageName != ''">
                 <bind name="messageNameLike" value="'%' + messageName + '%'"/>
-                AND hts.message_name LIKE #{messageNameLike}
+                AND htst.message_name LIKE #{messageNameLike}
             </if>
         </where>
     </select>
@@ -35,13 +36,14 @@
             hts.tenant_id,
             ht.tenant_name,
             hts.message_code,
-            hts.message_name,
+            htst.message_name,
             hts.category_code,
             hts.subcategory_code,
             hts.receive_config_flag,
             hts.enabled_flag,
             hts.object_version_number
         from hmsg_template_server hts
+        join hmsg_template_server_tl htst on htst.temp_server_id = hts.temp_server_id and htst.lang = #{lang}
         join hpfm_tenant_tl ht on ht.tenant_id = hts.tenant_id and ht.lang = #{lang}
         where
             hts.temp_server_id = #{tempServerId}

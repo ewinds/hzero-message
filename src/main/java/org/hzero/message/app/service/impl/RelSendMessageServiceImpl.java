@@ -22,7 +22,6 @@ import org.hzero.message.domain.repository.WebhookServerRepository;
 import org.hzero.message.infra.constant.HmsgConstant;
 import org.hzero.message.infra.feign.PlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -66,23 +65,6 @@ public class RelSendMessageServiceImpl implements RelSendMessageService {
     @Autowired
     private MessageClientProperties messageClientProperties;
 
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void relSendMessage(long tempServerId, String lang, List<String> typeCodeList, Map<String, String> args, String typeCode) {
-        TemplateServer templateServer = templateServerRepository.selectByPrimaryKey(tempServerId);
-        // 判断是否启用，及空指针
-        Assert.notNull(templateServer, BaseConstants.ErrorCode.DATA_NOT_EXISTS);
-        Assert.isTrue(Objects.equals(templateServer.getEnabledFlag(), BaseConstants.Flag.YES), BaseConstants.ErrorCode.DATA_NOT_EXISTS);
-        Long tenantId = templateServer.getTenantId();
-        // 获取接收人列表
-        List<Receiver> list = messageReceiverService.queryReceiver(tenantId, typeCode, args);
-        Assert.notNull(list, BaseConstants.ErrorCode.DATA_INVALID);
-        Map<String, List<TemplateServerLine>> serverLineMap = templateServerLineRepository.enabledTemplateServerLine(templateServer.getTempServerId(), templateServer.getTenantId())
-                .stream().collect(Collectors.groupingBy(TemplateServerLine::getTypeCode));
-        sendMessage(serverLineMap, typeCodeList, list, tenantId, lang, args, new HashMap<>(1));
-    }
-
     @Override
     public Map<String, Integer> relSendMessage(MessageSender messageSender) {
         List<org.hzero.message.domain.entity.Message> result = relSendMessageReceipt(messageSender);
@@ -118,27 +100,6 @@ public class RelSendMessageServiceImpl implements RelSendMessageService {
 
     private boolean sendEnable(List<String> typeCodeList, String typeCode) {
         return CollectionUtils.isEmpty(typeCodeList) || typeCodeList.contains(typeCode);
-    }
-
-    private void sendMessage(Map<String, List<TemplateServerLine>> serverLineMap, List<String> typeCodeList, List<Receiver> receiverAddressList, Long tenantId, String lang, Map<String, String> args, Map<String, Message> messageMap) {
-        List<org.hzero.message.domain.entity.Message> result = new ArrayList<>();
-        // 每种类型的模板只能指定一个
-        // 模板允许站内消息 且 (不指定发送方式且userId不为空 或 发送方式中指定了站内消息)
-        if (serverLineMap.containsKey(HmsgConstant.MessageType.WEB) && sendEnable(typeCodeList, HmsgConstant.MessageType.WEB)) {
-            sendWeb(serverLineMap, result, new MessageSender().setReceiverAddressList(receiverAddressList).setTenantId(tenantId).setLang(lang).setArgs(args).setMessageMap(messageMap));
-        }
-        // 模板允许短信 且 (不指定发送方式且phone不为空 或 发送方式中指定了短信)
-        if (serverLineMap.containsKey(HmsgConstant.MessageType.SMS) && sendEnable(typeCodeList, HmsgConstant.MessageType.SMS)) {
-            sendSms(serverLineMap, result, new MessageSender().setReceiverAddressList(receiverAddressList).setTenantId(tenantId).setLang(lang).setArgs(args).setMessageMap(messageMap));
-        }
-        // 模板允许邮件 且 (不指定发送方式且email不为空 或 发送方式中指定了邮件)
-        if (serverLineMap.containsKey(HmsgConstant.MessageType.EMAIL) && sendEnable(typeCodeList, HmsgConstant.MessageType.EMAIL)) {
-            sendEmail(serverLineMap, result, new MessageSender().setReceiverAddressList(receiverAddressList).setTenantId(tenantId).setLang(lang).setArgs(args).setMessageMap(messageMap).setBatchSend(BaseConstants.Flag.YES));
-        }
-        // 模板允许语音 且 (不指定发送方式且phone不为空 或 发送方式中指定了与语音)
-        if (serverLineMap.containsKey(HmsgConstant.MessageType.CALL) && sendEnable(typeCodeList, HmsgConstant.MessageType.CALL)) {
-            sendCall(serverLineMap, result, new MessageSender().setReceiverAddressList(receiverAddressList).setTenantId(tenantId).setLang(lang).setArgs(args).setMessageMap(messageMap));
-        }
     }
 
     private List<org.hzero.message.domain.entity.Message> sendMessage(Map<String, List<TemplateServerLine>> serverLineMap, MessageSender messageSender) {
@@ -192,7 +153,8 @@ public class RelSendMessageServiceImpl implements RelSendMessageService {
             MessageSender messageSender = new MessageSender()
                     .setTenantId(sender.getTenantId())
                     .setLang(sender.getLang())
-                    .setArgs(sender.getArgs());
+                    .setArgs(sender.getArgs())
+                    .setObjectArgs(sender.getObjectArgs());
             if (messageSender.getMessageMap() != null && messageSender.getMessageMap().containsKey(HmsgConstant.MessageType.WEB)) {
                 messageSender = messageSender.setMessage(messageSender.getMessageMap().get(HmsgConstant.MessageType.WEB));
             } else {
@@ -227,7 +189,8 @@ public class RelSendMessageServiceImpl implements RelSendMessageService {
             MessageSender messageSender = new MessageSender()
                     .setTenantId(sender.getTenantId())
                     .setLang(sender.getLang())
-                    .setArgs(sender.getArgs());
+                    .setArgs(sender.getArgs())
+                    .setObjectArgs(sender.getObjectArgs());
             if (messageSender.getMessageMap() != null && messageSender.getMessageMap().containsKey(HmsgConstant.MessageType.SMS)) {
                 messageSender = messageSender.setMessage(messageSender.getMessageMap().get(HmsgConstant.MessageType.SMS));
             } else {
@@ -265,7 +228,8 @@ public class RelSendMessageServiceImpl implements RelSendMessageService {
                     .setAttachmentList(sender.getAttachmentList())
                     .setCcList(sender.getCcList())
                     .setBccList(sender.getBccList())
-                    .setArgs(sender.getArgs());
+                    .setArgs(sender.getArgs())
+                    .setObjectArgs(sender.getObjectArgs());
             if (messageSender.getMessageMap() != null && messageSender.getMessageMap().containsKey(HmsgConstant.MessageType.EMAIL)) {
                 messageSender = messageSender.setMessage(messageSender.getMessageMap().get(HmsgConstant.MessageType.EMAIL));
             } else {
@@ -300,7 +264,8 @@ public class RelSendMessageServiceImpl implements RelSendMessageService {
             MessageSender messageSender = new MessageSender()
                     .setTenantId(sender.getTenantId())
                     .setLang(sender.getLang())
-                    .setArgs(sender.getArgs());
+                    .setArgs(sender.getArgs())
+                    .setObjectArgs(sender.getObjectArgs());
             if (messageSender.getMessageMap() != null && messageSender.getMessageMap().containsKey(HmsgConstant.MessageType.CALL)) {
                 messageSender = messageSender.setMessage(messageSender.getMessageMap().get(HmsgConstant.MessageType.CALL));
             } else {
@@ -523,14 +488,7 @@ public class RelSendMessageServiceImpl implements RelSendMessageService {
         if (StringUtils.isBlank(dingTalkSender.getReceiveConfigCode())) {
             dingTalkSender.setReceiveConfigCode(templateServer.getMessageCode());
         }
-        List<String> userIdList = filterDingTalkReceiver(dingTalkSender);
-        for (String userId : dingTalkSender.getUserIdList()) {
-            if (!UserReceiveConfig.check(redisHelper, HmsgConstant.MessageType.DT, userId, StringUtils.isNotBlank(dingTalkSender.getReceiveConfigCode()) ?
-                    dingTalkSender.getReceiveConfigCode() : templateServer.getMessageCode(), templateServer.getTenantId())) {
-                userIdList.add(userId);
-            }
-        }
-        dingTalkSender.setUserIdList(userIdList);
+        dingTalkSender.setUserIdList(filterDingTalkReceiver(dingTalkSender));
         Map<String, List<TemplateServerLine>> serverLineMap = templateServerLineRepository.enabledTemplateServerLine(templateServer.getTempServerId(), templateServer.getTenantId())
                 .stream().collect(Collectors.groupingBy(TemplateServerLine::getTypeCode));
         if (serverLineMap.containsKey(HmsgConstant.MessageType.DT)) {

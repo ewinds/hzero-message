@@ -25,7 +25,7 @@
         select
             hwe.server_id,
             hwe.server_code,
-            hwe.server_name,
+            hwet.server_name,
             hwe.auth_type,
             hwe.corpid,
             hwe.agent_id,
@@ -34,6 +34,7 @@
             hwe.object_version_number,
             ht.tenant_name
         from hmsg_wechat_enterprise hwe
+        join hmsg_wechat_enterprise_tl hwet on hwet.server_id = hwe.server_id and hwet.lang = #{lang}
         join hpfm_tenant_tl ht ON ht.tenant_id = hwe.tenant_id AND ht.lang = #{lang}
         where 1 = 1
         <if test="serverCode != null and serverCode != ''">
@@ -42,7 +43,7 @@
         </if>
         <if test="serverName != null and serverName != ''">
             <bind name="serverName" value="'%' + serverName + '%'"/>
-            and hwe.server_name like #{serverName}
+            and hwet.server_name like #{serverName}
         </if>
         <if test="authType != null and authType != ''">
             and hwe.auth_type = #{authType}
@@ -60,7 +61,7 @@
         select
             hwe.server_id,
             hwe.server_code,
-            hwe.server_name,
+            hwet.server_name,
             hwe.auth_type,
             hwe.corpid,
             hwe.agent_id,
@@ -71,6 +72,7 @@
             hwe.object_version_number,
             ht.tenant_name
         from hmsg_wechat_enterprise hwe
+        join hmsg_wechat_enterprise_tl hwet on hwet.server_id = hwe.server_id and hwet.lang = #{lang}
         join hpfm_tenant_tl ht ON ht.tenant_id = hwe.tenant_id AND ht.lang = #{lang}
         where hwe.server_id = #{serverId}
         <if test="tenantId != null">

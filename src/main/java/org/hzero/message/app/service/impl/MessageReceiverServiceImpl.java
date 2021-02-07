@@ -1,17 +1,17 @@
 package org.hzero.message.app.service.impl;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.hzero.boot.message.entity.MessageSender;
 import org.hzero.boot.message.entity.Receiver;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.util.ResponseUtils;
 import org.hzero.message.api.dto.UnitUserDTO;
 import org.hzero.message.app.service.MessageReceiverService;
+import org.hzero.message.domain.entity.ReceiverDetail;
 import org.hzero.message.domain.entity.ReceiverType;
 import org.hzero.message.domain.entity.ReceiverTypeLine;
 import org.hzero.message.domain.entity.UserGroupAssign;
+import org.hzero.message.domain.repository.ReceiverDetailRepository;
 import org.hzero.message.domain.repository.ReceiverTypeRepository;
 import org.hzero.message.infra.constant.HmsgConstant;
 import org.hzero.message.infra.feign.IamRemoteService;
@@ -23,7 +23,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 消息接受方应用服务默认实现
@@ -39,16 +40,19 @@ public class MessageReceiverServiceImpl implements MessageReceiverService {
     private RestTemplate restTemplate;
     private IamRemoteService iamRemoteService;
     private UnitService unitService;
+    private final ReceiverDetailRepository receiverDetailRepository;
 
     @Autowired
     public MessageReceiverServiceImpl(ReceiverTypeRepository receiverTypeRepository,
                                       IamRemoteService iamRemoteService,
                                       UnitService unitService,
-                                      RestTemplate restTemplate) {
+                                      RestTemplate restTemplate,
+                                      ReceiverDetailRepository receiverDetailRepository) {
         this.receiverTypeRepository = receiverTypeRepository;
         this.restTemplate = restTemplate;
         this.iamRemoteService = iamRemoteService;
         this.unitService = unitService;
+        this.receiverDetailRepository = receiverDetailRepository;
     }
 
     @Override
@@ -67,6 +71,23 @@ public class MessageReceiverServiceImpl implements MessageReceiverService {
         } else if (HmsgConstant.ReceiverTypeMode.UNIT.equals(receiverType.getTypeModeCode())) {
             List<UnitUserDTO> unitList = covertReceiverTypeLineToUnit(receiverUserGroupList);
             return ResponseUtils.getResponse(unitService.listUnitUsers(unitList), new TypeReference<Set<Receiver>>() {
+            }).stream().distinct().collect(Collectors.toList());
+        } else if (HmsgConstant.ReceiverTypeMode.EXT_USER.equals(receiverType.getTypeModeCode())) {
+            List<ReceiverDetail> receiverDetails = receiverDetailRepository.select(new ReceiverDetail().setReceiverTypeId(receiverType.getReceiverTypeId()));
+            List<Receiver> result = new ArrayList<>();
+            receiverDetails.forEach(receiverDetail -> {
+                Receiver receiver = new Receiver();
+                if (HmsgConstant.ReceiverAccountType.PHONE.equals(receiverDetail.getAccountTypeCode())) {
+                    receiver.setPhone(receiverDetail.getAccountNum());
+                } else {
+                    receiver.setEmail(receiverDetail.getAccountNum());
+                }
+                result.add(receiver);
+            });
+            return result;
+        } else if (HmsgConstant.ReceiverTypeMode.USER.equals(receiverType.getTypeModeCode())) {
+            List<Long> userIds = receiverUserGroupList.stream().map(ReceiverTypeLine::getReceiveTargetId).collect(Collectors.toList());
+            return ResponseUtils.getResponse(iamRemoteService.listReceiverByUserIds(tenantId, userIds), new TypeReference<Set<Receiver>>() {
             }).stream().distinct().collect(Collectors.toList());
         } else {
             if (!args.containsKey(TENANT_ID)) {
@@ -108,6 +129,10 @@ public class MessageReceiverServiceImpl implements MessageReceiverService {
         } else if (HmsgConstant.ReceiverTypeMode.UNIT.equals(receiverType.getTypeModeCode())) {
             List<UnitUserDTO> unitList = covertReceiverTypeLineToUnit(receiverUserGroupList);
             return ResponseUtils.getResponse(unitService.listOpenUnitUsers(unitList, thirdPlatformType), new TypeReference<Set<Receiver>>() {
+            }).stream().distinct().collect(Collectors.toList());
+        } else if (HmsgConstant.ReceiverTypeMode.USER.equals(receiverType.getTypeModeCode())) {
+            List<Long> userIds = receiverUserGroupList.stream().map(ReceiverTypeLine::getReceiveTargetId).collect(Collectors.toList());
+            return ResponseUtils.getResponse(iamRemoteService.listOpenReceiverByUserIds(tenantId, userIds, thirdPlatformType), new TypeReference<Set<Receiver>>() {
             }).stream().distinct().collect(Collectors.toList());
         } else {
             if (!args.containsKey(TENANT_ID)) {

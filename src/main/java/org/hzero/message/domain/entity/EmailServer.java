@@ -1,6 +1,8 @@
 package org.hzero.message.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.Length;
@@ -41,6 +43,7 @@ import io.choerodon.mybatis.domain.AuditDomain;
 @VersionAudit
 @ModifyAudit
 @Table(name = "hmsg_email_server")
+@MultiLanguage
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EmailServer extends AuditDomain {
 
@@ -165,6 +168,7 @@ public class EmailServer extends AuditDomain {
     private String serverCode;
     @NotBlank
     @Size(max = 60)
+    @MultiLanguageField
     private String serverName;
     @NotBlank
     @Size(max = 60)
@@ -194,6 +198,7 @@ public class EmailServer extends AuditDomain {
     @NotNull
     private Integer enabledFlag;
     @NotNull
+    @MultiLanguageField
     private Long tenantId;
 
     //

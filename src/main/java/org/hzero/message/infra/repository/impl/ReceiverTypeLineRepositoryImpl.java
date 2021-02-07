@@ -1,18 +1,21 @@
 package org.hzero.message.infra.repository.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import io.choerodon.core.domain.Page;
-import io.choerodon.mybatis.pagehelper.PageHelper;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
-import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
 import org.hzero.message.domain.entity.ReceiverTypeLine;
 import org.hzero.message.domain.entity.Unit;
 import org.hzero.message.domain.entity.UserGroup;
 import org.hzero.message.domain.repository.ReceiverTypeLineRepository;
-import org.hzero.message.infra.mapper.ReceiverTypeLineMapper;
 import org.hzero.message.infra.mapper.NoticeUnitMapper;
 import org.hzero.message.infra.mapper.NoticeUserGroupMapper;
+import org.hzero.message.infra.mapper.ReceiverTypeLineMapper;
+import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.PageHelper;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
 /**
  * 接收者类型行服务实现类
@@ -47,5 +50,8 @@ public class ReceiverTypeLineRepositoryImpl extends  BaseRepositoryImpl<Receiver
 		return PageHelper.doPageAndSort(pageRequest, () -> unitMapper.listUnits(receiverTypeId,unitName,unitCode));
 	}
 
-
+    @Override
+    public List<ReceiverTypeLine> listOldReceiveTypeLine(Long receiverTypeId) {
+        return receiverTypeLineMapper.listReceiveTypeLine(receiverTypeId);
+    }
 }

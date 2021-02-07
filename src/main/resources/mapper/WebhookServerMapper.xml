@@ -21,7 +21,7 @@
     <sql id="baseColumns">
          hws.server_id,
          hws.server_code,
-         hws.server_name,
+         hwst.server_name,
          hws.server_type,
          hws.enabled_flag,
          hws.tenant_id,
@@ -33,15 +33,15 @@
         SELECT
           <include refid="baseColumns" />
         FROM hmsg_webhook_server hws
-        LEFT JOIN hpfm_tenant ht ON hws.tenant_id = ht.tenant_id
-        LEFT JOIN hpfm_tenant_tl htt ON htt.tenant_id = ht.tenant_id AND htt.lang = #{lang}
+        JOIN hmsg_webhook_server_tl hwst ON hwst.server_id = hws.server_id AND hwst.lang = #{lang}
+        JOIN hpfm_tenant_tl htt ON htt.tenant_id = hws.tenant_id AND htt.lang = #{lang}
         <where>
             <if test="webhookServer.tenantId != null">
                 AND hws.tenant_id IN (#{webhookServer.tenantId}<if test="includeSiteIfQueryByTenantId">, 0</if>)
             </if>
             <if test="webhookServer.serverName != null and webhookServer.serverName != ''">
                 <bind name="serverNameLike" value="'%'+webhookServer.serverName+'%'" />
-                AND hws.server_name LIKE #{serverNameLike}
+                AND hwst.server_name LIKE #{serverNameLike}
             </if>
             <if test="webhookServer.serverCode != null and webhookServer.serverCode != ''">
                 <bind name="serverCodeLike" value="'%'+webhookServer.serverCode+'%'" />
@@ -56,8 +56,8 @@
           <include refid="baseColumns" />,
           hws.object_version_number
         FROM hmsg_webhook_server hws
-        LEFT JOIN hpfm_tenant ht ON hws.tenant_id = ht.tenant_id
-        LEFT JOIN hpfm_tenant_tl htt ON htt.tenant_id = ht.tenant_id AND htt.lang = #{lang}
+        JOIN hmsg_webhook_server_tl hwst ON hwst.server_id = hws.server_id AND hwst.lang = #{lang}
+        LEFT JOIN hpfm_tenant_tl htt ON htt.tenant_id = hws.tenant_id AND htt.lang = #{lang}
         WHERE hws.server_id = #{serverId}
         <if test="tenantId != null">
             AND hws.tenant_id = #{tenantId}

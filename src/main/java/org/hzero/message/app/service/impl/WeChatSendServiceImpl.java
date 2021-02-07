@@ -1,9 +1,11 @@
 package org.hzero.message.app.service.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hzero.boot.message.entity.WeChatMsgType;
 import org.hzero.boot.message.entity.WeChatSender;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.message.MessageAccessor;
@@ -79,21 +81,17 @@ public class WeChatSendServiceImpl extends AbstractSendService implements WeChat
             ApplicationContextHelper.getContext().getBean(WeChatSendService.class).asyncSendOfficialMessage(weChatSender);
             return null;
         } else {
-            return sendMessage(weChatSender);
+            return sendOfficial(weChatSender);
         }
     }
 
     @Override
     @Async("commonAsyncTaskExecutor")
     public void asyncSendOfficialMessage(WeChatSender weChatSender) {
-        sendMessage(weChatSender);
+        sendOfficial(weChatSender);
     }
 
-    private Message sendMessage(WeChatSender weChatSender) {
-        // 处理默认应用ID
-        if (weChatSender.getAgentId() == null) {
-            weChatSender.setAgentId(weChatEnterpriseService.getDefaultAgentId(weChatSender.getTenantId(), weChatSender.getServerCode()));
-        }
+    private Message sendOfficial(WeChatSender weChatSender) {
         // 生成消息记录
         Message message = createMessage(weChatSender, HmsgConstant.MessageType.WC_O);
         try {
@@ -172,16 +170,20 @@ public class WeChatSendServiceImpl extends AbstractSendService implements WeChat
             ApplicationContextHelper.getContext().getBean(WeChatSendService.class).asyncSendEnterpriseMessage(weChatSender);
             return null;
         } else {
-            return sendMsg(weChatSender);
+            return sendEnterprise(weChatSender);
         }
     }
 
     @Override
     public void asyncSendEnterpriseMessage(WeChatSender weChatSender) {
-        sendMsg(weChatSender);
+        sendEnterprise(weChatSender);
     }
 
-    private Message sendMsg(WeChatSender weChatSender) {
+    private Message sendEnterprise(WeChatSender weChatSender) {
+        // 处理默认应用ID
+        if (weChatSender.getAgentId() == null) {
+            weChatSender.setAgentId(weChatEnterpriseService.getDefaultAgentId(weChatSender.getTenantId(), weChatSender.getServerCode()));
+        }
         // 生成消息记录
         Message message = createMessage(weChatSender, HmsgConstant.MessageType.WC_E);
         try {
@@ -200,8 +202,7 @@ public class WeChatSendServiceImpl extends AbstractSendService implements WeChat
             }
             // 发送消息
             messageRepository.updateByPrimaryKeySelective(message);
-            sendEnterpriseMessage(weChatSender.getTenantId(), weChatSender.getServerCode(),
-                    weChatSender.getUserIdList(), message);
+            sendEnterpriseMessage(weChatSender.getTenantId(), weChatSender.getServerCode(), weChatSender.getUserIdList(), message, weChatSender.getMsgType());
             // 记录成功
             messageRepository.updateByPrimaryKeySelective(message.setSendFlag(BaseConstants.Flag.YES));
             MessageTransaction transaction = new MessageTransaction().setMessageId(message.getMessageId())
@@ -215,15 +216,15 @@ public class WeChatSendServiceImpl extends AbstractSendService implements WeChat
         return message;
     }
 
-    private void sendEnterpriseMessage(Long tenantId, String serverCode, List<String> userIdList, Message message) {
+    private void sendEnterpriseMessage(Long tenantId, String serverCode, List<String> userIdList, Message message, WeChatMsgType msgType) {
         List<String> receiverList = saveReceiver(tenantId, userIdList, message);
         String token = weChatEnterpriseService.getToken(tenantId, serverCode);
         Assert.isTrue(StringUtils.isNotBlank(token), BaseConstants.ErrorCode.DATA_INVALID);
-        sendEnterpriseMessage(token, receiverList, message);
+        sendEnterpriseMessage(token, receiverList, message, msgType);
     }
 
-    private void sendEnterpriseMessage(String token, List<String> userList, Message message) {
-        WeChatEnterpriseSupporter.sendMessage(weChatCorpMessageService, token, userList, message);
+    private void sendEnterpriseMessage(String token, List<String> userList, Message message, WeChatMsgType msgType) {
+        WeChatEnterpriseSupporter.sendMessage(weChatCorpMessageService, token, userList, message, msgType);
     }
 
     @Override
@@ -233,7 +234,18 @@ public class WeChatSendServiceImpl extends AbstractSendService implements WeChat
             // 获取token
             String token = weChatEnterpriseService.getToken(message.getTenantId(), message.getServerCode());
             List<String> userList = message.getMessageReceiverList().stream().map(MessageReceiver::getReceiverAddress).collect(Collectors.toList());
-            sendEnterpriseMessage(token, userList, message);
+            WeChatMsgType msgType = null;
+            Map<String, Object> map = message.getArgs();
+            if (map.containsKey(WeChatSender.FIELD_MSG_TYPE)) {
+                msgType = WeChatMsgType.getType(String.valueOf(map.get(WeChatSender.FIELD_MSG_TYPE)));
+                map.remove(WeChatSender.FIELD_MSG_TYPE);
+            }
+            // 重新生成消息内容
+            Message messageContent = messageGeneratorService.generateMessage(message.getTenantId(), message.getTemplateCode(), message.getLang(), map);
+            if (messageContent != null) {
+                message.setPlainContent(messageContent.getPlainContent());
+            }
+            sendEnterpriseMessage(token, userList, message, msgType);
             successProcessUpdate(message);
         } catch (Exception e) {
             failedProcessUpdate(message, e);

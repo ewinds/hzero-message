@@ -31,4 +31,9 @@ public class CallServerRepositoryImpl extends BaseRepositoryImpl<CallServer> imp
     public CallServer detailCallServer(Long tenantId, Long serverId) {
         return callServerMapper.detailCallServer(tenantId, serverId);
     }
+
+    @Override
+    public CallServer selectByCode(Long tenantId, String serverCode) {
+        return callServerMapper.selectByCode(tenantId, serverCode);
+    }
 }

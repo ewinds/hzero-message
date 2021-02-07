@@ -2,6 +2,8 @@ package org.hzero.message.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
@@ -38,6 +40,7 @@ import io.choerodon.mybatis.domain.AuditDomain;
 @ApiModel("消息模板账户")
 @VersionAudit
 @ModifyAudit
+@MultiLanguage
 @Table(name = "hmsg_template_server")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TemplateServer extends AuditDomain {
@@ -76,6 +79,7 @@ public class TemplateServer extends AuditDomain {
     private Long tempServerId;
     @ApiModelProperty(value = "租户ID,hpfm_tenant.tenant_id", required = true)
     @NotNull
+    @MultiLanguageField
     private Long tenantId;
     @ApiModelProperty(value = "消息代码", required = true)
     @NotBlank
@@ -85,6 +89,7 @@ public class TemplateServer extends AuditDomain {
     @ApiModelProperty(value = "消息名称", required = true)
     @NotBlank
     @Length(max = 120)
+    @MultiLanguageField
     private String messageName;
     @ApiModelProperty(value = "启用标识", required = true)
     @NotNull

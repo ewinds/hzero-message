@@ -1,10 +1,11 @@
 package org.hzero.message.infra.mapper;
 
-import io.choerodon.mybatis.common.BaseMapper;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 import org.hzero.message.domain.entity.CallServer;
 
-import java.util.List;
+import io.choerodon.mybatis.common.BaseMapper;
 
 /**
  * 语音消息服务Mapper
@@ -40,5 +41,15 @@ public interface CallServerMapper extends BaseMapper<CallServer> {
      */
     CallServer detailCallServer(@Param("tenantId") Long tenantId,
                                 @Param("serverId") Long serverId);
+
+    /**
+     * 根据编码查询服务配置
+     *
+     * @param tenantId   租户id
+     * @param serverCode 服务编码
+     * @return 查询结果
+     */
+    CallServer selectByCode(@Param("tenantId") Long tenantId,
+                            @Param("serverCode") String serverCode);
 
 }

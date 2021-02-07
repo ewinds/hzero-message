@@ -10,7 +10,10 @@ import org.hzero.message.domain.entity.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import io.choerodon.core.iam.ResourceLevel;
 import io.choerodon.swagger.annotation.Permission;
@@ -26,8 +29,9 @@ import io.choerodon.swagger.annotation.Permission;
 @RestController("messageGeneratorSiteController.v1")
 @RequestMapping("v1")
 public class MessageGeneratorSiteController {
-    private MessageGeneratorService messageGeneratorService;
-    private MessageClientProperties messageClientProperties;
+
+    private final MessageGeneratorService messageGeneratorService;
+    private final MessageClientProperties messageClientProperties;
 
     @Autowired
     public MessageGeneratorSiteController(MessageGeneratorService messageGeneratorService, MessageClientProperties messageClientProperties) {
@@ -43,6 +47,7 @@ public class MessageGeneratorSiteController {
     @Permission(level = ResourceLevel.SITE)
     @PostMapping("/messages/contents")
     public ResponseEntity<Message> generateMessage(@RequestBody @ApiParam(value = "templateCode(必须),args(可空),lang(可空，取默认语言)") UserMessageDTO userMessage) {
-        return Results.success(messageGeneratorService.generateMessage(userMessage.getTemplateCode(), StringUtils.hasText(userMessage.getLang()) ? userMessage.getLang() : messageClientProperties.getDefaultLang(), userMessage.getArgs()));
+        return Results.success(messageGeneratorService.generateMessage(userMessage.getTemplateCode(),
+                StringUtils.hasText(userMessage.getLang()) ? userMessage.getLang() : messageClientProperties.getDefaultLang(), userMessage.getArgs()));
     }
 }

@@ -36,6 +36,7 @@ public class TemplateServerServiceImpl implements TemplateServerService, AopProx
     private final MessageTemplateRepository messageTemplateRepository;
     private final EmailServerRepository emailServerRepository;
     private final SmsServerRepository smsServerRepository;
+    private final CallServerRepository callServerRepository;
     private final WeChatOfficialRepository weChatOfficialRepository;
     private final WeChatEnterpriseRepository weChatEnterpriseRepository;
     private final DingTalkServerRepository dingTalkServerRepository;
@@ -47,6 +48,7 @@ public class TemplateServerServiceImpl implements TemplateServerService, AopProx
                                      MessageTemplateRepository messageTemplateRepository,
                                      EmailServerRepository emailServerRepository,
                                      SmsServerRepository smsServerRepository,
+                                     CallServerRepository callServerRepository,
                                      WeChatOfficialRepository weChatOfficialRepository,
                                      WeChatEnterpriseRepository weChatEnterpriseRepository,
                                      DingTalkServerRepository dingTalkServerRepository,
@@ -56,6 +58,7 @@ public class TemplateServerServiceImpl implements TemplateServerService, AopProx
         this.messageTemplateRepository = messageTemplateRepository;
         this.emailServerRepository = emailServerRepository;
         this.smsServerRepository = smsServerRepository;
+        this.callServerRepository = callServerRepository;
         this.weChatOfficialRepository = weChatOfficialRepository;
         this.weChatEnterpriseRepository = weChatEnterpriseRepository;
         this.dingTalkServerRepository = dingTalkServerRepository;
@@ -106,6 +109,15 @@ public class TemplateServerServiceImpl implements TemplateServerService, AopProx
                 }
                 if (smsServer != null) {
                     serverName = smsServer.getServerName();
+                }
+                break;
+            case HmsgConstant.MessageType.CALL:
+                CallServer callServer = callServerRepository.selectByCode(tenantId, serverCode);
+                if (callServer == null && !Objects.equals(tenantId, BaseConstants.DEFAULT_TENANT_ID)) {
+                    callServer = callServerRepository.selectByCode(BaseConstants.DEFAULT_TENANT_ID, serverCode);
+                }
+                if (callServer != null) {
+                    serverName = callServer.getServerName();
                 }
                 break;
             case HmsgConstant.MessageType.WC_O:

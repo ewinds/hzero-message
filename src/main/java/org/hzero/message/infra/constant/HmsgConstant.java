@@ -39,6 +39,7 @@ public class HmsgConstant {
      * 消息模板内容匹配占位符
      */
     public static final String TEMPLATE_CONTENT_REGEX = "\\$\\{.*?\\}";
+    public static final String TEMPLATE_SECRET_CONTENT_REGEX = "\\$\\{\\{.*?}}";
 
     /**
      * 消息类型
@@ -108,6 +109,14 @@ public class HmsgConstant {
          * 组织
          */
         public static final String UNIT = "UNIT";
+        /**
+         * 外部用户
+         */
+        public static final String EXT_USER = "EXT_USER";
+        /**
+         * 用户
+         */
+        public static final String USER = "USER";
     }
 
     /**
@@ -443,6 +452,25 @@ public class HmsgConstant {
         public static final String WE_CHAT = "WeChat";
         public static final String DING_TALK = "DingTalk";
         public static final String JSON = "Json";
+    }
+
+    /**
+     * 接收者账户类型
+     */
+    public static final class ReceiverAccountType {
+        private ReceiverAccountType() {
+        }
+
+        public static final String EMAIL = "EMAIL";
+
+        public static final String PHONE = "PHONE";
+    }
+
+    public static final class TemplateEditType {
+        private TemplateEditType (){}
+
+        public static final String MARKDOWN = "MD";
+        public static final String RICH_TEXT = "RT";
     }
 
 }

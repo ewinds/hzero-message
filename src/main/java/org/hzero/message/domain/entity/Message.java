@@ -141,6 +141,11 @@ public class Message extends AuditDomain {
 
     @Transient
     private List<String> bccList;
+    @Transient
+    private String plainContent;
+
+    @Transient
+    private String templateEditType;
     //
     // getter/setter
     // ------------------------------------------------------------------------------
@@ -373,6 +378,24 @@ public class Message extends AuditDomain {
 
     public Message setMessageReceiverList(List<MessageReceiver> messageReceiverList) {
         this.messageReceiverList = messageReceiverList;
+        return this;
+    }
+
+    public String getPlainContent() {
+        return plainContent;
+    }
+
+    public Message setPlainContent(String plainContent) {
+        this.plainContent = plainContent;
+        return this;
+    }
+
+    public String getTemplateEditType() {
+        return templateEditType;
+    }
+
+    public Message setTemplateEditType(String templateEditType) {
+        this.templateEditType = templateEditType;
         return this;
     }
 }

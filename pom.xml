@@ -6,10 +6,10 @@
     <parent>
         <groupId>org.hzero</groupId>
         <artifactId>hzero-parent</artifactId>
-        <version>1.4.0.RELEASE</version>
+        <version>1.5.0.RELEASE</version>
     </parent>
     <artifactId>hzero-message-saas</artifactId>
-    <version>1.4.4.RELEASE</version>
+    <version>1.5.2.RELEASE</version>
 
     <dependencies>
         <!-- HZero Starter & Boot -->

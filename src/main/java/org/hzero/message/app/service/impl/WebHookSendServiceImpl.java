@@ -177,7 +177,7 @@ public class WebHookSendServiceImpl extends AbstractSendService implements WebHo
         // 判断WebHook的类型，执行不同的消息发送方式
         switch (messageSender.getServerType()) {
             case HmsgConstant.WebHookServerType.JSON:
-                sendWHJsonMessage(messageSender);
+                sendWHJsonMessage(messageSender, message);
                 break;
             case HmsgConstant.WebHookServerType.DING_TALK:
                 // 获取接收人
@@ -218,7 +218,8 @@ public class WebHookSendServiceImpl extends AbstractSendService implements WebHo
      * @param message       消息内容类
      */
     private void sendWHWeChatMessage(WebHookSender messageSender, Message message) {
-        String content = message.getContent()
+        String msgContent = StringUtils.isEmpty(message.getPlainContent()) ? message.getContent() : message.getPlainContent();
+        String content = msgContent
                 .replaceAll("<(?!font|/font).*?>", "")
                 .replace("&lt;", "<")
                 .replace("&gt;", ">")
@@ -243,11 +244,12 @@ public class WebHookSendServiceImpl extends AbstractSendService implements WebHo
      * @param receivers     需要@的手机号
      */
     private void sendWHDingTalkMessage(WebHookSender messageSender, Message message, Set<String> receivers) {
+        String msgContent = StringUtils.isEmpty(message.getPlainContent()) ? message.getContent() : message.getPlainContent();
         WhDingTalkSend whDingTalkSend = new WhDingTalkSend();
         WhDingTalkSend.WhDingAt whDingAt = new WhDingTalkSend.WhDingAt();
         WhDingTalkSend.WhDingMarkdown whDingMarkdown = new WhDingTalkSend.WhDingMarkdown();
         // 转换内容格式
-        String contentText = String.format("%s", message.getContent()
+        String contentText = String.format("%s", msgContent
                 .replaceAll("<[^>]+>", "")
                 .replace("&lt;", "<")
                 .replace("&gt;", ">")
@@ -294,11 +296,8 @@ public class WebHookSendServiceImpl extends AbstractSendService implements WebHo
      *
      * @param messageSender WebHookSender
      */
-    private void sendWHJsonMessage(WebHookSender messageSender) {
-        sendWHHttpMessage(messageSender.getWebhookAddress(), messageSender);
-    }
-
-    private void sendWHHttpMessage(String path, WebHookSender messageSender) {
+    private void sendWHJsonMessage(WebHookSender messageSender, Message message) {
+        String msgContent = StringUtils.isEmpty(message.getPlainContent()) ? message.getContent() : message.getPlainContent();
         HttpHeaders httpHeaders = new HttpHeaders();
         MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
         httpHeaders.setContentType(type);
@@ -308,16 +307,20 @@ public class WebHookSendServiceImpl extends AbstractSendService implements WebHo
                 httpHeaders.add(split[0], split[1]);
             }
         }
-        HttpEntity<String> request = new HttpEntity<>(messageSender.getMessage().getContent(), httpHeaders);
+        HttpEntity<String> request = new HttpEntity<>(msgContent, httpHeaders);
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.postForEntity(path, request, String.class);
+        restTemplate.postForEntity(messageSender.getWebhookAddress(), request, String.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Message resendWebHookMessage(UserMessageDTO message) {
-        WebhookServer dbWebHook = webhookServerRepository.selectOne(
-                new WebhookServer().setServerCode(message.getServerCode()).setTenantId(message.getTenantId()));
+        // 重新生成消息内容
+        Message messageContent = messageGeneratorService.generateMessage(message.getTenantId(), message.getTemplateCode(), message.getLang(), message.getArgs());
+        if (messageContent != null) {
+            message.setPlainContent(messageContent.getPlainContent());
+        }
+        WebhookServer dbWebHook = webhookServerRepository.selectOne(new WebhookServer().setServerCode(message.getServerCode()).setTenantId(message.getTenantId()));
         if (dbWebHook == null && !message.getTenantId().equals(BaseConstants.DEFAULT_TENANT_ID)) {
             dbWebHook = webhookServerRepository.selectOne(new WebhookServer()
                     .setTenantId(BaseConstants.DEFAULT_TENANT_ID).setServerCode(message.getServerCode()));
